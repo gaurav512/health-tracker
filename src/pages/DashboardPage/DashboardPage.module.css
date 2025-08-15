@@ -23,6 +23,7 @@
   display: flex;
   align-items: center;
   gap: 10px; /* Reduced gap for mobile */
+  min-width: 0; /* Allow header controls to shrink */
 }
 
 .welcomeMessage {
@@ -102,9 +103,10 @@
   padding: 1rem 1.5rem;
   box-shadow: var(--shadow-elevation-low);
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Changed from space-between */
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap; /* Allow items to wrap */
 }
 
 .dateNavButton {
@@ -138,6 +140,7 @@
   color: var(--color-text-primary);
   flex-grow: 1;
   text-align: center;
+  min-width: 0; /* Allow text to shrink */
 }
 
 .sectionLoader {
