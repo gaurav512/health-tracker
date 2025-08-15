@@ -3,10 +3,16 @@
  * @param {number} birthYear - The user's birth year.
  * @returns {number} - The calculated age.
  */
-const calculateAge = (birthYear) => {
+const calculateAge = (birthYear: number): number => {
   const currentYear = new Date().getFullYear();
   return currentYear - birthYear;
 };
+
+interface BMRMetrics {
+  weight_kg: number;
+  height_cm: number;
+  birthYear: number;
+}
 
 /**
  * Calculates Basal Metabolic Rate (BMR) using the Mifflin-St Jeor equation.
@@ -17,12 +23,14 @@ const calculateAge = (birthYear) => {
  * @param {number} metrics.birthYear - Year of birth.
  * @returns {number} - The calculated BMR.
  */
-export const calculateBMR = ({ weight_kg, height_cm, birthYear }) => {
+export const calculateBMR = ({ weight_kg, height_cm, birthYear }: BMRMetrics): number => {
   const age = calculateAge(birthYear);
   // Mifflin-St Jeor Equation: 10 * weight (kg) + 6.25 * height (cm) - 5 * age (y) + 5 (for men) / - 161 (for women)
   // We use a simplified, gender-neutral version by omitting the last constant.
   return (10 * weight_kg) + (6.25 * height_cm) - (5 * age);
 };
+
+type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active';
 
 /**
  * Calculates Total Daily Energy Expenditure (TDEE).
@@ -30,8 +38,8 @@ export const calculateBMR = ({ weight_kg, height_cm, birthYear }) => {
  * @param {string} activityLevel - The user's activity level.
  * @returns {number} - The calculated TDEE.
  */
-export const calculateTDEE = (bmr, activityLevel) => {
-  const activityMultipliers = {
+export const calculateTDEE = (bmr: number, activityLevel: ActivityLevel): number => {
+  const activityMultipliers: Record<ActivityLevel, number> = {
     sedentary: 1.2,
     lightly_active: 1.375,
     moderately_active: 1.55,
@@ -41,13 +49,15 @@ export const calculateTDEE = (bmr, activityLevel) => {
   return bmr * multiplier;
 };
 
+type Goal = 'lose' | 'maintain' | 'gain';
+
 /**
  * Suggests a daily calorie target based on the user's goal.
  * @param {number} tdee - The user's TDEE.
  * @param {string} goal - The user's weight goal ('lose', 'maintain', 'gain').
  * @returns {number} - The suggested daily calorie target.
  */
-export const suggestCalorieTarget = (tdee, goal) => {
+export const suggestCalorieTarget = (tdee: number, goal: Goal): number => {
   let adjustment = 0;
   if (goal === 'lose') {
     adjustment = -500; // Standard 500 calorie deficit for ~1 lb/week loss

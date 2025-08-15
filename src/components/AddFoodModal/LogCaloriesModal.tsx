@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import styles from './LogCaloriesModal.module.css';
+import { FoodLogEntry } from '../../firebase/firestore';
 
-const LogCaloriesModal = ({ isOpen, onClose, onSave, selectedDate, foodToEdit }) => {
+interface LogCaloriesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (action: 'add' | 'edit', mealType: string, foodData: { description: string; calories: number }, selectedDate: string, foodToEdit: FoodLogEntry | null) => void;
+  selectedDate: string;
+  foodToEdit: FoodLogEntry | null;
+}
+
+const LogCaloriesModal: React.FC<LogCaloriesModalProps> = ({ isOpen, onClose, onSave, selectedDate, foodToEdit }) => {
   const [description, setDescription] = useState('');
   const [calories, setCalories] = useState('');
   const [selectedMealType, setSelectedMealType] = useState('Breakfast');
@@ -9,11 +18,10 @@ const LogCaloriesModal = ({ isOpen, onClose, onSave, selectedDate, foodToEdit })
   const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 
   useEffect(() => {
-    
     if (foodToEdit) {
-      setDescription(foodToEdit.description || ''); // Ensure it's always a string
+      setDescription(foodToEdit.description || '');
       setCalories(typeof foodToEdit.calories === 'number' ? foodToEdit.calories.toString() : '');
-      setSelectedMealType(foodToEdit.mealType || 'Breakfast'); // Ensure it's always a string
+      setSelectedMealType(foodToEdit.mealType || 'Breakfast');
     } else {
       setDescription('');
       setCalories('');
@@ -21,18 +29,15 @@ const LogCaloriesModal = ({ isOpen, onClose, onSave, selectedDate, foodToEdit })
     }
   }, [foodToEdit, isOpen]);
 
-  const handleSave = (e) => {
+  const handleSave = (e: FormEvent) => {
     e.preventDefault();
     const finalDescription = description.trim() === '' ? selectedMealType : description;
 
-    if (finalDescription && calories > 0) {
+    if (finalDescription && Number(calories) > 0) {
       const actionType = foodToEdit ? 'edit' : 'add';
       const foodData = { description: finalDescription, calories: Number(calories) };
-      
-      
 
-      // Call onSave with the correct arguments matching handleLogUpdate signature
-      onSave(actionType, selectedMealType, foodData, selectedDate, foodToEdit); 
+      onSave(actionType, selectedMealType, foodData, selectedDate, foodToEdit);
       onClose();
     }
   };

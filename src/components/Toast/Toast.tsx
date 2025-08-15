@@ -1,8 +1,13 @@
-
 import React from 'react';
 import styles from './Toast.module.css';
 
-const Toast = ({ message, type, onClose }) => {
+interface ToastProps {
+  message: string;
+  type: 'info' | 'success' | 'error';
+  onClose: () => void;
+}
+
+const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   if (!message) return null;
 
   const toastClass = `${styles.toast} ${styles[type || 'info']}`;

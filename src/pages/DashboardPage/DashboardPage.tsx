@@ -6,8 +6,8 @@ import MealLogger from '../../components/MealLogger/MealLogger';
 import WeightEntryForm from '../../components/WeightEntryForm/WeightEntryForm';
 import WeightChart from '../../components/WeightChart/WeightChart';
 import CalorieChart from '../../components/CalorieChart/CalorieChart';
-import LogCaloriesModal from '../../components/AddFoodModal/LogCaloriesModal'; // Import LogCaloriesModal
-import ConfirmationModal from '../../components/ConfirmationModal/ConfirmationModal'; // Import ConfirmationModal
+import LogCaloriesModal from '../../components/AddFoodModal/LogCaloriesModal';
+import ConfirmationModal from '../../components/ConfirmationModal/ConfirmationModal';
 import { useAuth, logOut } from '../../firebase/auth';
 import { useUserProfile } from '../../context/UserProvider';
 import { useTheme } from '../../context/ThemeProvider';
@@ -18,23 +18,22 @@ import {
   addFoodLogEntry,
   deleteFoodLogEntry,
   addRecentFood,
-  updateFoodLogEntry
+  updateFoodLogEntry,
+  WeightEntry,
+  FoodLogEntry
 } from '../../firebase/firestore';
 
-// Helper to get today's date in YYYY-MM-DD format
-const getTodayString = () => {
+const getTodayString = (): string => {
   const today = new Date();
   return today.toISOString().split('T')[0];
 };
 
-// Helper to format date for display
-const formatDate = (dateString) => {
-  const options = { weekday: 'short', month: 'short', day: 'numeric' };
+const formatDate = (dateString: string): string => {
+  const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
   return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
-// Helper to get relative date string (Today, Yesterday)
-const getRelativeDateString = (dateString) => {
+const getRelativeDateString = (dateString: string): string => {
   const today = getTodayString();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -49,7 +48,14 @@ const getRelativeDateString = (dateString) => {
   }
 };
 
-const DashboardPage = () => {
+interface DailyLog {
+  Breakfast: FoodLogEntry[];
+  Lunch: FoodLogEntry[];
+  Dinner: FoodLogEntry[];
+  Snacks: FoodLogEntry[];
+}
+
+const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
@@ -59,25 +65,23 @@ const DashboardPage = () => {
     document.title = 'HealthTracker - Dashboard';
   }, []);
 
-  const [weightData, setWeightData] = useState([]);
-  const [dailyLog, setDailyLog] = useState({ Breakfast: [], Lunch: [], Dinner: [], Snacks: [] });
-  const [loadingWeightData, setLoadingWeightData] = useState(true); // Separate loading state for weight
-  const [loadingDailyLog, setLoadingDailyLog] = useState(true); // Separate loading state for daily log
+  const [weightData, setWeightData] = useState<WeightEntry[]>([]);
+  const [dailyLog, setDailyLog] = useState<DailyLog>({ Breakfast: [], Lunch: [], Dinner: [], Snacks: [] });
+  const [loadingWeightData, setLoadingWeightData] = useState(true);
+  const [loadingDailyLog, setLoadingDailyLog] = useState(true);
   const [currentLogDate, setCurrentLogDate] = useState(getTodayString());
 
-  const [isLogCaloriesModalOpen, setIsLogCaloriesModalOpen] = useState(false); // State for modal
-  const [foodToEdit, setFoodToEdit] = useState(null); // State for editing food
+  const [isLogCaloriesModalOpen, setIsLogCaloriesModalOpen] = useState(false);
+  const [foodToEdit, setFoodToEdit] = useState<FoodLogEntry | null>(null);
 
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // State for confirmation modal
-  const [itemToDelete, setItemToDelete] = useState(null); // Item to be deleted
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<FoodLogEntry | null>(null);
 
-  // Define fetch functions using useCallback
   const fetchWeight = useCallback(async () => {
     if (user) {
       setLoadingWeightData(true);
       const weights = await getWeightEntries(user.uid);
-      const formattedWeights = weights.map(w => ({...w, date: w.id }));
-      setWeightData(formattedWeights);
+      setWeightData(weights);
       setLoadingWeightData(false);
     }
   }, [user]);
@@ -86,18 +90,17 @@ const DashboardPage = () => {
     if (user) {
       setLoadingDailyLog(true);
       const logs = await getDailyLogEntries(user.uid, currentLogDate);
-      const groupedLogs = { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] };
+      const groupedLogs: DailyLog = { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] };
       logs.forEach(log => {
-        if (groupedLogs[log.mealType]) {
-          groupedLogs[log.mealType].push(log);
+        if (groupedLogs[log.mealType as keyof DailyLog]) {
+          groupedLogs[log.mealType as keyof DailyLog].push(log);
         }
       });
       setDailyLog(groupedLogs);
       setLoadingDailyLog(false);
     }
-  }, [user, currentLogDate]); // Dependencies for fetchDailyLog
+  }, [user, currentLogDate]);
 
-  // Effects to call fetch functions
   useEffect(() => {
     fetchWeight();
   }, [fetchWeight]);
@@ -110,7 +113,7 @@ const DashboardPage = () => {
     return Object.values(dailyLog).flat().reduce((sum, item) => sum + item.calories, 0);
   }, [dailyLog]);
 
-  const handleLogUpdate = async (action, mealType, food, date = getTodayString(), originalFood = null) => {
+  const handleLogUpdate = async (action: 'add' | 'edit' | 'delete', mealType: string, food: any, date: string = getTodayString(), originalFood: FoodLogEntry | null = null) => {
     if (!user) {
       return;
     }
@@ -118,24 +121,23 @@ const DashboardPage = () => {
     try {
       if (action === 'add') {
         const newLogData = { ...food, mealType };
-        delete newLogData.id; 
+        delete newLogData.id;
         await addFoodLogEntry(user.uid, newLogData, date);
         await addRecentFood(user.uid, food);
       } else if (action === 'delete') {
-        // Open confirmation modal instead of window.confirm
-        setItemToDelete(food); // Store the item to be deleted
-        setIsConfirmModalOpen(true); // Open the confirmation modal
-        return; // Exit to wait for confirmation
-      } else if (action === 'edit') { 
+        setItemToDelete(food);
+        setIsConfirmModalOpen(true);
+        return;
+      } else if (action === 'edit') {
         const updatedLogData = { ...food, mealType };
-        await updateFoodLogEntry(user.uid, originalFood.id, updatedLogData);
+        if (originalFood) {
+          await updateFoodLogEntry(user.uid, originalFood.id, updatedLogData);
+        }
       }
       
-      // After any log update (except for delete, which is handled by handleConfirmDelete), re-fetch daily logs to update UI for the currentLogDate
-      await fetchDailyLog(); // Call the dedicated fetch function
+      await fetchDailyLog();
     } catch (error) {
       console.error('DashboardPage - Error in handleLogUpdate:', error);
-      // Optionally, show a toast message to the user about the error
     }
   };
 
@@ -144,20 +146,19 @@ const DashboardPage = () => {
 
     try {
       await deleteFoodLogEntry(user.uid, itemToDelete.id);
-      await fetchDailyLog(); // Refresh UI after deletion
+      await fetchDailyLog();
     } catch (error) {
       console.error('DashboardPage - Error during deletion confirmation:', error);
     } finally {
-      setIsConfirmModalOpen(false); // Close modal
-      setItemToDelete(null); // Clear item to delete
+      setIsConfirmModalOpen(false);
+      setItemToDelete(null);
     }
   };
 
-  const handleWeightUpdate = async (date, weight) => {
+  const handleWeightUpdate = async (date: string, weight: string) => {
     if (!user) return;
-    await addOrUpdateWeightEntry(user.uid, date, weight);
-    // After weight update, re-fetch weight data to update chart
-    await fetchWeight(); // Call the dedicated fetch function
+    await addOrUpdateWeightEntry(user.uid, date, Number(weight));
+    await fetchWeight();
   };
 
   const handleSignOut = async () => {
@@ -169,13 +170,13 @@ const DashboardPage = () => {
     }
   };
 
-  const handleDateChange = (offset) => {
+  const handleDateChange = (offset: number) => {
     const newDate = new Date(currentLogDate);
     newDate.setDate(newDate.getDate() + offset);
     setCurrentLogDate(newDate.toISOString().split('T')[0]);
   };
 
-  const handleOpenLogCaloriesModal = (food = null) => {
+  const handleOpenLogCaloriesModal = (food: FoodLogEntry | null = null) => {
     setFoodToEdit(food);
     setIsLogCaloriesModalOpen(true);
   };
@@ -185,13 +186,12 @@ const DashboardPage = () => {
     setFoodToEdit(null);
   };
 
-  const handleEditFoodFromMealLogger = (foodItem) => {
+  const handleEditFoodFromMealLogger = (foodItem: FoodLogEntry) => {
     handleOpenLogCaloriesModal(foodItem);
   };
 
-  // Initial loading for auth and user profile
   if (user === undefined || userProfile === undefined) {
-    return <div className="full-page-loader"><div></div></div>; // Initial app loading
+    return <div className="full-page-loader"><div></div></div>;
   }
 
   return (
@@ -220,8 +220,8 @@ const DashboardPage = () => {
           </button>
           <span 
             className={styles.welcomeMessage}
-            onClick={() => navigate('/profile')} /* Make welcome message clickable */
-            style={{ cursor: 'pointer' }} /* Add pointer cursor for UX */
+            onClick={() => navigate('/profile')} 
+            style={{ cursor: 'pointer' }} 
           >
             Welcome, {userProfile?.displayName || user?.displayName}!
           </span>
@@ -260,23 +260,21 @@ const DashboardPage = () => {
                 onUpdateLog={handleLogUpdate} 
                 selectedDate={currentLogDate} 
                 getRelativeDateString={getRelativeDateString} 
-                onEditFoodClick={handleEditFoodFromMealLogger} /* New prop */
+                onEditFoodClick={handleEditFoodFromMealLogger} 
               />
               <CalorieChart />
             </>
           )}
         </section>
       </main>
-      {/* LogCaloriesModal rendered here */}
       <LogCaloriesModal 
         isOpen={isLogCaloriesModalOpen}
         onClose={handleCloseLogCaloriesModal}
-        onSave={handleLogUpdate} // handleLogUpdate will handle add/edit
+        onSave={handleLogUpdate}
         selectedDate={currentLogDate}
         foodToEdit={foodToEdit}
       />
 
-      {/* ConfirmationModal rendered here */}
       <ConfirmationModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}

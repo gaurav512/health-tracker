@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './ProfilePage.module.css';
 import { useAuth } from '../../firebase/auth';
 import { useUserProfile } from '../../context/UserProvider';
 import { useToast } from '../../context/ToastProvider';
 import {
-  updateUserOnboardingData, // Reusing this for profile updates
-  getUserProfile // To ensure we have the latest data if context is not updated immediately
+  updateUserProfileData,
+  getUserProfile
 } from '../../firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 
-const ProfilePage = () => {
+const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { userProfile, refreshUserProfile } = useUserProfile();
@@ -36,14 +36,14 @@ const ProfilePage = () => {
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
 
-  const activityLevels = [
+  const activityLevels: { value: string; label: string }[] = [
     { value: 'sedentary', label: 'Sedentary (little or no exercise)' },
     { value: 'lightly_active', label: 'Lightly Active (light exercise/sports 1-3 days/week)' },
     { value: 'moderately_active', label: 'Moderately Active (moderate exercise/sports 3-5 days/week)' },
     { value: 'very_active', label: 'Very Active (hard exercise/sports 6-7 days/week)' },
   ];
 
-  const goals = [
+  const goals: { value: string; label: string }[] = [
     { value: 'lose', label: 'Lose Weight' },
     { value: 'maintain', label: 'Maintain Weight' },
     { value: 'gain', label: 'Gain Weight' },
@@ -52,26 +52,24 @@ const ProfilePage = () => {
   useEffect(() => {
     if (userProfile) {
       setDisplayName(userProfile.displayName || '');
-      setHeight(userProfile.height_cm || '');
-      setBirthYear(userProfile.birthYear || '');
+      setHeight(userProfile.height_cm?.toString() || '');
+      setBirthYear(userProfile.birthYear?.toString() || '');
       setActivityLevel(userProfile.activityLevel || 'sedentary');
       setGoal(userProfile.goal || 'maintain');
-      setWeightGoal(userProfile.weightGoal_kg || '');
-      setCalorieTarget(userProfile.calorieTarget || '');
+      setWeightGoal(userProfile.weightGoal_kg?.toString() || '');
+      setCalorieTarget(userProfile.calorieTarget?.toString() || '');
       setLoading(false);
     } else if (user) {
-      // If user is logged in but profile not yet loaded, wait for it
-      // Or fetch it if it's a direct navigation and context hasn't caught up
       const fetchProfile = async () => {
         const profile = await getUserProfile(user.uid);
         if (profile) {
           setDisplayName(profile.displayName || '');
-          setHeight(profile.height_cm || '');
-          setBirthYear(profile.birthYear || '');
+          setHeight(profile.height_cm?.toString() || '');
+          setBirthYear(profile.birthYear?.toString() || '');
           setActivityLevel(profile.activityLevel || 'sedentary');
           setGoal(profile.goal || 'maintain');
-          setWeightGoal(profile.weightGoal_kg || '');
-          setCalorieTarget(profile.calorieTarget || '');
+          setWeightGoal(profile.weightGoal_kg?.toString() || '');
+          setCalorieTarget(profile.calorieTarget?.toString() || '');
         }
         setLoading(false);
       };
@@ -79,28 +77,24 @@ const ProfilePage = () => {
     }
   }, [user, userProfile]);
 
-  const handleProfileUpdate = async (e) => {
+  const handleProfileUpdate = async (e: FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     setIsProfileSaving(true);
     try {
-      // Recalculate calorie target if relevant metrics changed
-      // For simplicity, we'll just save the current calorieTarget from state
-      // A more robust solution would re-run the BMR/TDEE calculation here
-
-      await updateUserOnboardingData(user.uid, {
+      await updateUserProfileData(user.uid, {
         displayName,
         height_cm: Number(height),
         birthYear: Number(birthYear),
         activityLevel,
         goal,
         weightGoal_kg: Number(weightGoal),
-        calorieTarget: Number(calorieTarget), // Assuming this is manually updated or re-calculated elsewhere
+        calorieTarget: Number(calorieTarget) || null,
       });
-      await refreshUserProfile(); // Refresh context to update UI across app
+      await refreshUserProfile();
       showToast('Profile updated successfully!', 'success');
-    } catch (error) {
+    } catch (error: any) {
       showToast(`Profile update failed: ${error.message}`, 'error');
       console.error('Profile update error:', error);
     } finally {
@@ -108,7 +102,7 @@ const ProfilePage = () => {
     }
   };
 
-  const handlePasswordUpdate = async (e) => {
+  const handlePasswordUpdate = async (e: FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
@@ -123,15 +117,17 @@ const ProfilePage = () => {
 
     setIsPasswordSaving(true);
     try {
-      const credential = EmailAuthProvider.credential(user.email, currentPassword);
-      await reauthenticateWithCredential(user, credential);
-      await updatePassword(user, newPassword);
-      showToast('Password updated successfully!', 'success');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmNewPassword('');
-    } catch (error) {
-      showToast(`Password update failed: ${error.message}. Please re-login if you haven't recently.`, 'error');
+      if (user.email) {
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPassword);
+        showToast('Password updated successfully!', 'success');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+      }
+    } catch (error: any) {
+      showToast(`Password update failed: ${error.message}. Please re-login if you haven\'t recently.`, 'error');
       console.error('Password update error:', error);
     } finally {
       setIsPasswordSaving(false);
@@ -157,7 +153,7 @@ const ProfilePage = () => {
               type="text"
               id="displayName"
               value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDisplayName(e.target.value)}
               className={styles.input}
             />
           </div>
@@ -167,7 +163,7 @@ const ProfilePage = () => {
               type="number"
               id="height"
               value={height}
-              onChange={(e) => setHeight(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setHeight(e.target.value)}
               className={styles.input}
             />
           </div>
@@ -177,7 +173,7 @@ const ProfilePage = () => {
               type="number"
               id="birthYear"
               value={birthYear}
-              onChange={(e) => setBirthYear(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setBirthYear(e.target.value)}
               className={styles.input}
             />
           </div>
@@ -186,7 +182,7 @@ const ProfilePage = () => {
             <select
               id="activityLevel"
               value={activityLevel}
-              onChange={(e) => setActivityLevel(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setActivityLevel(e.target.value)}
               className={styles.select}
             >
               {activityLevels.map(level => (
@@ -199,7 +195,7 @@ const ProfilePage = () => {
             <select
               id="goal"
               value={goal}
-              onChange={(e) => setGoal(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setGoal(e.target.value)}
               className={styles.select}
             >
               {goals.map(g => (
@@ -213,7 +209,7 @@ const ProfilePage = () => {
               type="number"
               id="weightGoal"
               value={weightGoal}
-              onChange={(e) => setWeightGoal(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setWeightGoal(e.target.value)}
               className={styles.input}
             />
           </div>
@@ -223,7 +219,7 @@ const ProfilePage = () => {
               type="number"
               id="calorieTarget"
               value={calorieTarget}
-              onChange={(e) => setCalorieTarget(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setCalorieTarget(e.target.value)}
               className={styles.input}
             />
           </div>
@@ -240,7 +236,7 @@ const ProfilePage = () => {
               type="password"
               id="currentPassword"
               value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setCurrentPassword(e.target.value)}
               className={styles.input}
               required
             />
@@ -251,7 +247,7 @@ const ProfilePage = () => {
               type="password"
               id="newPassword"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
               className={styles.input}
               required
             />
@@ -262,7 +258,7 @@ const ProfilePage = () => {
               type="password"
               id="confirmNewPassword"
               value={confirmNewPassword}
-              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmNewPassword(e.target.value)}
               className={styles.input}
               required
             />

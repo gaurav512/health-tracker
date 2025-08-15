@@ -1,23 +1,24 @@
-import React, { useState, useEffect, forwardRef } from 'react';
+import React, { useState, useEffect, forwardRef, ChangeEvent, FormEvent } from 'react';
 import DatePicker from 'react-datepicker';
 import { format } from 'date-fns';
 import 'react-datepicker/dist/react-datepicker.css';
 import styles from './WeightEntryForm.module.css';
 import { useToast } from '../../context/ToastProvider';
+import { WeightEntry } from '../../firebase/firestore';
 
-// Helper to get today's date in YYYY-MM-DD format (keep this for max date)
-const getTodayString = () => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
-};
 
-// Custom Input for DatePicker
-const CustomDateInput = forwardRef(({
-  value,
-  onClick,
-  getRelativeDateString,
-  formattedDate
-}, ref) => (
+
+interface CustomDateInputProps {
+  value?: string;
+  onClick?: () => void;
+  getRelativeDateString: (date: string) => string;
+  formattedDate: string;
+}
+
+const CustomDateInput = forwardRef<HTMLInputElement, CustomDateInputProps>((
+  { onClick, getRelativeDateString, formattedDate }, 
+  ref
+) => (
   <input
     type="text"
     className={styles.dateDisplayButton}
@@ -28,9 +29,14 @@ const CustomDateInput = forwardRef(({
   />
 ));
 
-// Add getRelativeDateString as a prop
-const WeightEntryForm = ({ onSave, entries = [], getRelativeDateString }) => {
-  const [date, setDate] = useState(new Date()); // Initialize with Date object
+interface WeightEntryFormProps {
+  onSave: (date: string, weight: string) => void;
+  entries: WeightEntry[];
+  getRelativeDateString: (date: string) => string;
+}
+
+const WeightEntryForm: React.FC<WeightEntryFormProps> = ({ onSave, entries = [], getRelativeDateString }) => {
+  const [date, setDate] = useState<Date>(new Date());
   const [weight, setWeight] = useState('');
   const [isExistingEntry, setIsExistingEntry] = useState(false);
   const { showToast } = useToast();
@@ -38,7 +44,7 @@ const WeightEntryForm = ({ onSave, entries = [], getRelativeDateString }) => {
   useEffect(() => {
     const entryForDate = entries.find(e => e.id === format(date, 'yyyy-MM-dd'));
     if (entryForDate) {
-      setWeight(entryForDate.weight_kg);
+      setWeight(entryForDate.weight_kg.toString());
       setIsExistingEntry(true);
     } else {
       setWeight('');
@@ -46,14 +52,14 @@ const WeightEntryForm = ({ onSave, entries = [], getRelativeDateString }) => {
     }
   }, [date, entries]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!weight || weight <= 0) {
+    if (!weight || Number(weight) <= 0) {
       showToast('Please enter a valid weight.', 'error');
       return;
-    };
-    onSave(format(date, 'yyyy-MM-dd'), weight); // Pass formatted date string
-    showToast(`Weight for ${getRelativeDateString(format(date, 'yyyy-MM-dd'))} has been saved.`, 'success'); // Use relative date in toast
+    }
+    onSave(format(date, 'yyyy-MM-dd'), weight);
+    showToast(`Weight for ${getRelativeDateString(format(date, 'yyyy-MM-dd'))} has been saved.`, 'success');
   };
 
   return (
@@ -63,10 +69,10 @@ const WeightEntryForm = ({ onSave, entries = [], getRelativeDateString }) => {
         <div className={styles.inputGroup}>
           <DatePicker
             selected={date}
-            onChange={(newDate) => setDate(newDate)}
+            onChange={(newDate: Date | null) => setDate(newDate || new Date())}
             dateFormat="yyyy-MM-dd"
             maxDate={new Date()}
-            customInput={ // Render a custom input to display the date
+            customInput={
               <CustomDateInput
                 getRelativeDateString={getRelativeDateString}
                 formattedDate={format(date, 'yyyy-MM-dd')}
@@ -82,7 +88,7 @@ const WeightEntryForm = ({ onSave, entries = [], getRelativeDateString }) => {
             step="0.1"
             placeholder="e.g., 75.5"
             value={weight}
-            onChange={(e) => setWeight(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setWeight(e.target.value)}
             className={styles.weightInput}
           />
         </div>

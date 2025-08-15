@@ -1,21 +1,41 @@
-
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import Toast from '../components/Toast/Toast';
 
-const ToastContext = createContext(null);
+interface Toast {
+  id: number;
+  message: string;
+  type: 'info' | 'success' | 'error';
+  duration: number;
+}
 
-export const useToast = () => useContext(ToastContext);
+interface ToastContextType {
+  showToast: (message: string, type?: 'info' | 'success' | 'error', duration?: number) => void;
+}
 
-export const ToastProvider = ({ children }) => {
-  const [toast, setToast] = useState(null);
-  const [toastQueue, setToastQueue] = useState([]);
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-  const showToast = useCallback((message, type = 'info', duration = 3000) => {
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToast must be used within a ToastProvider');
+  }
+  return context;
+};
+
+interface ToastProviderProps {
+  children: ReactNode;
+}
+
+export const ToastProvider = ({ children }: ToastProviderProps) => {
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [toastQueue, setToastQueue] = useState<Toast[]>([]);
+
+  const showToast = useCallback((message: string, type: 'info' | 'success' | 'error' = 'info', duration = 3000) => {
     const id = Date.now();
     setToastQueue(prevQueue => [...prevQueue, { id, message, type, duration }]);
   }, []);
 
-  const handleCloseToast = useCallback((id) => {
+  const handleCloseToast = useCallback((id: number) => {
     setToastQueue(prevQueue => prevQueue.filter(t => t.id !== id));
   }, []);
 

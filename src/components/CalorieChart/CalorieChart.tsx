@@ -9,6 +9,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartOptions
 } from 'chart.js';
 import styles from './CalorieChart.module.css';
 import { getDailyCalorieTotals } from '../../firebase/firestore';
@@ -25,10 +26,15 @@ ChartJS.register(
   Legend
 );
 
-const CalorieChart = () => {
+interface CalorieData {
+  date: string;
+  totalCalories: number;
+}
+
+const CalorieChart: React.FC = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
-  const [calorieData, setCalorieData] = useState([]);
+  const [calorieData, setCalorieData] = useState<CalorieData[]>([]);
   const [timeRange, setTimeRange] = useState('30'); // '30', '90', 'all'
   const [loading, setLoading] = useState(true);
 
@@ -45,9 +51,6 @@ const CalorieChart = () => {
       } else if (timeRange === '90') {
         startDate.setDate(today.getDate() - 89);
       } else { // 'all'
-        // For 'all time', we might need a very early date or rely on the first log entry
-        // For simplicity, let's set a fixed far-back date or fetch all available
-        // For now, let's assume a reasonable default if 'all' is too broad for initial fetch
         startDate = new Date(2023, 0, 1); // Example: Start of 2023
       }
 
@@ -91,22 +94,20 @@ const CalorieChart = () => {
         fill: false,
         borderWidth: 3, // Thickness for the chart line
       },
-    ].filter(Boolean), // Filter out null/undefined datasets
+    ].filter(Boolean) as any, // Filter out null/undefined datasets
   };
 
-  const options = {
+  const options: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        position: 'top' as const,
         labels: {
-          usePointStyle: true, // Use point style for legend items
-          pointStyle: 'line', // Force line style
-          boxWidth: 40, // Standard width for the line symbol
-          boxHeight: 10, // Standard height for the line symbol
-          fontColor: 'var(--color-text-primary)', // Ensure legend text color adapts to theme
-          // Removed custom generateLabels
+          usePointStyle: true,
+          pointStyle: 'line',
+          boxWidth: 40,
+          boxHeight: 10,
         },
       },
       title: {

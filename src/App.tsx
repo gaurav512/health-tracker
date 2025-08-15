@@ -6,25 +6,25 @@ import SignUpPage from './pages/SignUpPage/SignUpPage';
 import OnboardingFlow from './components/OnboardingFlow/OnboardingFlow';
 import DashboardPage from './pages/DashboardPage/DashboardPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
-// import './App.css'; // Removed unused import
-import React from 'react'; // Removed useEffect as it's no longer used
+import { ReactNode } from 'react';
 
-// A wrapper for routes that require a logged-in user.
-const ProtectedRoute = ({ children }) => {
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile();
 
   if (authLoading || profileLoading) {
-    return <div className="full-page-loader"><div></div></div>; // Or a spinner component
+    return <div className="full-page-loader"><div></div></div>;
   }
 
   if (!user) {
     return <Navigate to="/login" />;
   }
 
-  // If user is logged in but hasn't completed onboarding, force them to the onboarding page.
   if (user && !userProfile?.calorieTarget) {
-    // Allow access only to the onboarding page itself
     if (window.location.pathname !== '/onboarding') {
       return <Navigate to="/onboarding" />;
     }
@@ -34,13 +34,11 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
-  // Removed diagnostic logs
-
   const { user, loading: authLoading } = useAuth();
-  const { userProfile, loading: profileLoading } = useUserProfile();
+  const { loading: profileLoading } = useUserProfile();
 
   if (authLoading || profileLoading) {
-    return <div className="full-page-loader"><div></div></div>; // Full page loader
+    return <div className="full-page-loader"><div></div></div>;
   }
 
   return (

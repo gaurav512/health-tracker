@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './OnboardingFlow.module.css';
 import { calculateBMR, calculateTDEE, suggestCalorieTarget } from '../../utils/healthCalculators';
@@ -6,34 +6,41 @@ import { useAuth } from '../../firebase/auth';
 import { updateUserOnboardingData } from '../../firebase/firestore';
 import { useUserProfile } from '../../context/UserProvider';
 
-const OnboardingFlow = () => {
+interface FormData {
+  goal: 'lose' | 'maintain' | 'gain';
+  height_cm: string;
+  currentWeight_kg: string;
+  birthYear: string;
+  activityLevel: 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active';
+}
+
+const OnboardingFlow: React.FC = () => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    goal: 'maintain', // lose, maintain, gain
+  const [formData, setFormData] = useState<FormData>({
+    goal: 'maintain',
     height_cm: '',
     currentWeight_kg: '',
     birthYear: '',
-    activityLevel: 'sedentary', // sedentary, lightly_active, etc.
+    activityLevel: 'sedentary',
   });
-  const [calculatedTarget, setCalculatedTarget] = useState(null);
+  const [calculatedTarget, setCalculatedTarget] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { refreshUserProfile } = useUserProfile(); // Get refresh function from context
+  const { refreshUserProfile } = useUserProfile();
 
   useEffect(() => {
     document.title = 'HealthTracker - Onboarding';
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value as any }));
   };
 
   const handleNext = () => {
     const currentYear = new Date().getFullYear();
     if (step === 2) {
-      // Validation for metrics step
       if (!formData.height_cm || !formData.currentWeight_kg || !formData.birthYear) {
         alert('Please fill in all your metrics.');
         return;
@@ -51,7 +58,6 @@ const OnboardingFlow = () => {
         alert('You must be at least 10 years old.');
         return;
       }
-      // Calculate target before moving to the final step
       const bmr = calculateBMR({
         weight_kg: Number(formData.currentWeight_kg),
         height_cm: Number(formData.height_cm),
@@ -84,7 +90,6 @@ const OnboardingFlow = () => {
       };
       await updateUserOnboardingData(user.uid, finalData);
       
-      // Force refresh user profile in context after successful onboarding
       if (refreshUserProfile) {
         await refreshUserProfile();
       }
@@ -99,7 +104,6 @@ const OnboardingFlow = () => {
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        {/* Progress Bar */}
         <div className={styles.progressBar}>
           <div className={styles.progress} style={{ width: `${(step / 3) * 100}%` }}></div>
         </div>
@@ -110,9 +114,9 @@ const OnboardingFlow = () => {
             <div className={styles.goalOptions}>
               {['lose', 'maintain', 'gain'].map(goal => (
                 <button 
-                  key={goal} 
+                  key={goal}
                   name="goal"
-                  onClick={() => setFormData(prev => ({ ...prev, goal }))}
+                  onClick={() => setFormData(prev => ({ ...prev, goal: goal as FormData['goal'] }))}
                   className={`${styles.goalButton} ${formData.goal === goal ? styles.selected : ''}`}>
                   {goal.charAt(0).toUpperCase() + goal.slice(1)} Weight
                 </button>
@@ -141,8 +145,8 @@ const OnboardingFlow = () => {
                   value={formData.birthYear} 
                   onChange={handleChange} 
                   placeholder="e.g., 1990"
-                  min="1900" // Reasonable minimum
-                  max={new Date().getFullYear()} // No future years
+                  min="1900"
+                  max={new Date().getFullYear()}
                 />
               </div>
               <div className={styles.inputGroup}>
@@ -169,7 +173,6 @@ const OnboardingFlow = () => {
           </div>
         )}
 
-        {/* Navigation Buttons */}
         <div className={styles.navigation}>
           {step > 1 && <button onClick={handleBack} className={styles.backButton} disabled={loading}>Back</button>}
           {step < 3 && <button onClick={handleNext} className={styles.nextButton}>Next</button>}

@@ -1,7 +1,13 @@
 import React from 'react';
 import styles from './CalorieBudget.module.css';
 
-const CalorieBudget = ({ target, food = 0, onLogCaloriesClick }) => {
+interface CalorieBudgetProps {
+  target: number | null | undefined;
+  food: number;
+  onLogCaloriesClick: (food: null) => void;
+}
+
+const CalorieBudget: React.FC<CalorieBudgetProps> = ({ target, food = 0, onLogCaloriesClick }) => {
   // Set a default target if none is provided, to prevent division by zero
   const dailyTarget = target || 2000;
 

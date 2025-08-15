@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import { Link } from 'react-router-dom';
 import styles from './SignUpPage.module.css';
 import { signUp } from '../../firebase/auth';
 
-const SignUpPage = () => {
+const SignUpPage: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  
 
   useEffect(() => {
     document.title = 'HealthTracker - Sign Up';
   }, []);
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -33,10 +33,7 @@ const SignUpPage = () => {
 
     try {
       await signUp(email, password, displayName);
-      // After sign-up, the user is considered logged in.
-      // The router will redirect them to the onboarding flow.
-      // No need for navigate('/onboarding') here.
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
       console.error('Error signing up:', err);
       setLoading(false);
@@ -55,7 +52,7 @@ const SignUpPage = () => {
               type="text"
               id="displayName"
               value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDisplayName(e.target.value)}
               placeholder="Your Name"
               required
             />
@@ -66,7 +63,7 @@ const SignUpPage = () => {
               type="email"
               id="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               placeholder="name@example.com"
               required
             />
@@ -77,7 +74,7 @@ const SignUpPage = () => {
               type="password"
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               placeholder="6+ characters"
               required
             />

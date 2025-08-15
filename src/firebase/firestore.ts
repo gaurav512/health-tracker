@@ -1,6 +1,41 @@
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, where, Timestamp, serverTimestamp, orderBy } from "firebase/firestore"; 
 import { db } from './config';
 
+// --- INTERFACES --- //
+
+export interface UserProfile {
+  goal: string;
+  height_cm: number;
+  birthYear: number;
+  activityLevel: string;
+  calorieTarget: number;
+  weightGoal_kg: number;
+  displayName: string;
+  email: string;
+  createdAt: Timestamp;
+}
+
+export interface WeightEntry {
+  id: string;
+  weight_kg: number;
+  timestamp: Timestamp;
+}
+
+export interface FoodLogEntry {
+  id: string;
+  description: string;
+  calories: number;
+  mealType: string;
+  timestamp: Timestamp;
+}
+
+export interface RecentFood {
+  id: string;
+  description: string;
+  calories: number;
+  lastUsed: Timestamp;
+}
+
 // --- USER PROFILE --- //
 
 /**
@@ -8,10 +43,10 @@ import { db } from './config';
  * @param {string} userId - The ID of the user to fetch.
  * @returns {Promise<object|null>} - The user's profile data or null if not found.
  */
-export const getUserProfile = async (userId) => {
+export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
   const userDocRef = doc(db, 'users', userId);
   const userDocSnap = await getDoc(userDocRef);
-  return userDocSnap.exists() ? userDocSnap.data() : null;
+  return userDocSnap.exists() ? userDocSnap.data() as UserProfile : null;
 };
 
 /**
@@ -20,14 +55,14 @@ export const getUserProfile = async (userId) => {
  * @param {string} userId - The ID of the user.
  * @param {object} data - The onboarding data.
  */
-export const updateUserOnboardingData = async (userId, data) => {
+export const updateUserOnboardingData = async (userId: string, data: any): Promise<void> => {
   const userDocRef = doc(db, 'users', userId);
   
   // 1. Update the main user document
   await updateDoc(userDocRef, {
     goal: data.goal,
     height_cm: Number(data.height_cm),
-    birthYear: Number(data.birthYear), // Corrected field name and ensured number conversion
+    birthYear: Number(data.birthYear),
     activityLevel: data.activityLevel,
     calorieTarget: data.calorieTarget,
     weightGoal_kg: Number(data.currentWeight_kg),
@@ -38,8 +73,18 @@ export const updateUserOnboardingData = async (userId, data) => {
   const weightEntryRef = doc(db, `users/${userId}/weightEntries`, today);
   await setDoc(weightEntryRef, {
     weight_kg: Number(data.currentWeight_kg),
-    timestamp: Timestamp.fromDate(new Date(today)) // Corrected variable name
+    timestamp: Timestamp.fromDate(new Date(today))
   });
+};
+
+/**
+ * Updates a user's profile data in Firestore.
+ * @param {string} userId - The ID of the user.
+ * @param {object} data - The profile data to update.
+ */
+export const updateUserProfileData = async (userId: string, data: any): Promise<void> => {
+  const userDocRef = doc(db, 'users', userId);
+  await updateDoc(userDocRef, data);
 };
 
 // --- WEIGHT ENTRIES --- //
@@ -49,11 +94,11 @@ export const updateUserOnboardingData = async (userId, data) => {
  * @param {string} userId - The user's ID.
  * @returns {Promise<Array>} - An array of weight entry objects.
  */
-export const getWeightEntries = async (userId) => {
+export const getWeightEntries = async (userId: string): Promise<WeightEntry[]> => {
   const entriesColRef = collection(db, `users/${userId}/weightEntries`);
   const q = query(entriesColRef, orderBy('timestamp', 'asc'));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WeightEntry));
 };
 
 /**
@@ -62,7 +107,7 @@ export const getWeightEntries = async (userId) => {
  * @param {string} date - The date string (YYYY-MM-DD).
  * @param {number} weight_kg - The weight in kilograms.
  */
-export const addOrUpdateWeightEntry = async (userId, date, weight_kg) => {
+export const addOrUpdateWeightEntry = async (userId: string, date: string, weight_kg: number): Promise<void> => {
   const entryDocRef = doc(db, `users/${userId}/weightEntries`, date);
   await setDoc(entryDocRef, { 
     weight_kg: Number(weight_kg),
@@ -78,7 +123,7 @@ export const addOrUpdateWeightEntry = async (userId, date, weight_kg) => {
  * @param {string} date - The date string (YYYY-MM-DD).
  * @returns {Promise<Array>} - An array of food log entry objects.
  */
-export const getDailyLogEntries = async (userId, date) => {
+export const getDailyLogEntries = async (userId: string, date: string): Promise<FoodLogEntry[]> => {
   
   const startOfDay = Timestamp.fromDate(new Date(date));
   const endOfDay = Timestamp.fromDate(new Date(`${date}T23:59:59.999`));
@@ -91,7 +136,7 @@ export const getDailyLogEntries = async (userId, date) => {
   
   try {
     const snapshot = await getDocs(q);
-    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FoodLogEntry));
     
     return logs;
   } catch (error) {
@@ -107,19 +152,18 @@ export const getDailyLogEntries = async (userId, date) => {
  * @param {string} date - The date string (YYYY-MM-DD) for the log entry.
  * @returns {Promise<DocumentReference>} - The reference to the newly created document.
  */
-export const addFoodLogEntry = async (userId, foodData, date) => {
+export const addFoodLogEntry = async (userId: string, foodData: any, date: string): Promise<void> => {
   
   const entriesColRef = collection(db, `users/${userId}/dailyLogs`);
   // Use the provided date to create a timestamp for the log entry
   const logTimestamp = Timestamp.fromDate(new Date(date));
   try {
-    const docRef = await addDoc(entriesColRef, {
+    await addDoc(entriesColRef, {
       ...foodData,
       timestamp: logTimestamp
     });
     
     await addRecentFood(userId, foodData); // Add to recent foods
-    return docRef;
   } catch (error) {
     console.error('Firestore - Error in addFoodLogEntry:', error); // DIAGNOSTIC LOG
     throw error;
@@ -132,7 +176,7 @@ export const addFoodLogEntry = async (userId, foodData, date) => {
  * @param {string} entryId - The ID of the log entry to update.
  * @param {object} updatedFoodData - The updated food item data.
  */
-export const updateFoodLogEntry = async (userId, entryId, updatedFoodData) => {
+export const updateFoodLogEntry = async (userId: string, entryId: string, updatedFoodData: any): Promise<void> => {
   
   const entryDocRef = doc(db, `users/${userId}/dailyLogs`, entryId);
   try {
@@ -155,7 +199,7 @@ export const updateFoodLogEntry = async (userId, entryId, updatedFoodData) => {
  * @param {string} userId - The user's ID.
  * @param {string} entryId - The ID of the log entry to delete.
  */
-export const deleteFoodLogEntry = async (userId, entryId) => {
+export const deleteFoodLogEntry = async (userId: string, entryId: string): Promise<void> => {
   
   const entryDocRef = doc(db, `users/${userId}/dailyLogs`, entryId);
   try {
@@ -174,7 +218,7 @@ export const deleteFoodLogEntry = async (userId, entryId) => {
  * @param {string} endDate - The end date string (YYYY-MM-DD).
  * @returns {Promise<Array>} - An array of objects, each with a date and totalCalories.
  */
-export const getDailyCalorieTotals = async (userId, startDate, endDate) => {
+export const getDailyCalorieTotals = async (userId: string, startDate: string, endDate: string): Promise<{ date: string; totalCalories: number; }[]> => {
   
   const startTimestamp = Timestamp.fromDate(new Date(startDate));
   const endTimestamp = Timestamp.fromDate(new Date(`${endDate}T23:59:59.999`));
@@ -188,16 +232,16 @@ export const getDailyCalorieTotals = async (userId, startDate, endDate) => {
 
   try {
     const snapshot = await getDocs(q);
-    const dailyTotals = {};
+    const dailyTotals: { [key: string]: number } = {};
 
     snapshot.docs.forEach(doc => {
-      const data = doc.data();
+      const data = doc.data() as FoodLogEntry;
       const date = data.timestamp.toDate().toISOString().split('T')[0];
       dailyTotals[date] = (dailyTotals[date] || 0) + data.calories;
     });
 
     // Convert to array of { date, totalCalories } objects and ensure all days in range are present
-    const result = [];
+    const result: { date: string; totalCalories: number; }[] = [];
     let currentDate = new Date(startDate);
     const lastDate = new Date(endDate);
 
@@ -224,11 +268,11 @@ export const getDailyCalorieTotals = async (userId, startDate, endDate) => {
  * @param {string} userId - The user's ID.
  * @returns {Promise<Array>} - An array of recent food objects.
  */
-export const getRecentFoods = async (userId) => {
+export const getRecentFoods = async (userId: string): Promise<RecentFood[]> => {
   const recentFoodsColRef = collection(db, `users/${userId}/recentFoods`);
   const q = query(recentFoodsColRef, orderBy('lastUsed', 'desc'), where('lastUsed', '!=', null));
   const snapshot = await getDocs(q);
-  const foods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const foods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecentFood));
   return foods;
 };
 
@@ -238,7 +282,7 @@ export const getRecentFoods = async (userId) => {
  * @param {string} userId - The user's ID.
  * @param {object} foodData - The food item data.
  */
-export const addRecentFood = async (userId, foodData) => {
+export const addRecentFood = async (userId: string, foodData: any): Promise<void> => {
   
   // A simple hash to create a consistent ID for each unique food description.
   const foodId = btoa(foodData.description.toLowerCase()).substring(0, 20);

@@ -1,52 +1,41 @@
 import React from 'react';
 import styles from './MealLogger.module.css';
-// LogCaloriesModal is now managed by DashboardPage, so no need to import here
+import { FoodLogEntry } from '../../firebase/firestore';
 
-const MealLogger = ({ dailyLogData, onUpdateLog, selectedDate, getRelativeDateString, onEditFoodClick }) => {
-  // The modal state and handlers are now managed by DashboardPage
-  // const [isModalOpen, setModalOpen] = useState(false);
-  // const [editingFood, setEditingFood] = useState(null);
+interface MealLoggerProps {
+  dailyLogData: {
+    Breakfast: FoodLogEntry[];
+    Lunch: FoodLogEntry[];
+    Dinner: FoodLogEntry[];
+    Snacks: FoodLogEntry[];
+  };
+  onUpdateLog: (action: 'delete', mealType: string, food: FoodLogEntry) => void;
+  selectedDate: string;
+  getRelativeDateString: (date: string) => string;
+  onEditFoodClick: (foodItem: FoodLogEntry) => void;
+}
 
-  // Flatten dailyLogData into a single array for table display
+const MealLogger: React.FC<MealLoggerProps> = ({ dailyLogData, onUpdateLog, selectedDate, getRelativeDateString, onEditFoodClick }) => {
   const allLoggedFoods = Object.keys(dailyLogData).flatMap(mealType =>
-    dailyLogData[mealType].map(item => ({ ...item, mealType }))
+    (dailyLogData[mealType as keyof typeof dailyLogData] || []).map(item => ({ ...item, mealType }))
   );
 
-  // These handlers will now be passed down from DashboardPage
-  // const handleOpenModal = (foodToEdit = null) => {
-  //   setEditingFood(foodToEdit);
-  //   setModalOpen(true);
-  // };
-
-  // const handleCloseModal = () => {
-  //   setModalOpen(false);
-  //   setEditingFood(null);
-  // };
-
-  // const handleSaveFood = (food, mealType) => {
-  //   onUpdateLog(editingFood ? 'edit' : 'add', mealType, food, selectedDate, editingFood);
-  // };
-
-  const handleDeleteFood = (item) => {
-    // This will handle deleting a food item from Firestore
+  const handleDeleteFood = (item: FoodLogEntry) => {
     onUpdateLog('delete', item.mealType, item);
   };
 
-  const handleEditClick = (foodItem) => { // Removed 'event' parameter
-    
-    onEditFoodClick(foodItem); 
+  const handleEditClick = (foodItem: FoodLogEntry) => {
+    onEditFoodClick(foodItem);
   };
 
   return (
     <>
-      {/* LogCaloriesModal is now rendered in DashboardPage */}
       <div className={styles.loggerContainer}>
         <div className={styles.loggerHeader}>
           <h2 className={styles.mainTitle}>
             Calorie Intake
             <span className={styles.subTitleDate}>{getRelativeDateString(selectedDate)}</span>
           </h2>
-          {/* Removed (+) Log Calories button from here */}
         </div>
         <div className={styles.tableContainer}>
           {allLoggedFoods.length > 0 ? (
@@ -67,7 +56,7 @@ const MealLogger = ({ dailyLogData, onUpdateLog, selectedDate, getRelativeDateSt
                     <td>{item.calories} kcal</td>
                     <td>
                       <div className={styles.actionIcons}>
-                        <button onClick={() => handleEditClick(item)} className={styles.iconButton} title="Edit"> {/* Removed 'e' from onClick */} 
+                        <button onClick={() => handleEditClick(item)} className={styles.iconButton} title="Edit">
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-edit">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
