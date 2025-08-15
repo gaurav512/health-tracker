@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import { UserProvider } from './context/UserProvider';
 import { ToastProvider } from './context/ToastProvider';
 import { ThemeProvider } from './context/ThemeProvider';
@@ -11,7 +11,7 @@ const container = document.getElementById('root');
 if (container) {
   createRoot(container).render(
     <StrictMode>
-      <BrowserRouter basename="/health-tracker/">
+      <HashRouter>
         <ToastProvider>
           <UserProvider>
             <ThemeProvider>
@@ -19,7 +19,7 @@ if (container) {
             </ThemeProvider>
           </UserProvider>
         </ToastProvider>
-      </BrowserRouter>
+      </HashRouter>
     </StrictMode>,
   );
 }
