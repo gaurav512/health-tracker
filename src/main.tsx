@@ -11,7 +11,7 @@ const container = document.getElementById('root');
 if (container) {
   createRoot(container).render(
     <StrictMode>
-      <BrowserRouter>
+      <BrowserRouter basename="/health-tracker/">
         <ToastProvider>
           <UserProvider>
             <ThemeProvider>
