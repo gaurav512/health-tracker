@@ -45,7 +45,7 @@
 .inputGroup input:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2); /* Using a direct rgba for now */
+  box-shadow: 0 0 0 2px var(--color-accent-shadow); /* Using a direct rgba for now */
 }
 
 .submitButton {

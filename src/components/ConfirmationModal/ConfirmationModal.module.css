@@ -67,7 +67,7 @@
 }
 
 .confirmButton {
-  background-color: #fa383e; /* Red for destructive action */
+  background-color: var(--color-status-red); /* Red for destructive action */
   color: white;
 }
 

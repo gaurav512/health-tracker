@@ -83,15 +83,15 @@
 }
 
 .progressBar.green {
-  background-color: #42b72a;
+  background-color: var(--color-status-green);
 }
 
 .progressBar.yellow {
-  background-color: #f5c33b;
+  background-color: var(--color-status-yellow);
 }
 
 .progressBar.red {
-  background-color: #fa383e;
+  background-color: var(--color-status-red);
 }
 
 .logCaloriesButton {
