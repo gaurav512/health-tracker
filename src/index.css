@@ -11,6 +11,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Universal box-sizing for easier layout management */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* Default (Dark) Theme Variables */
 body.dark-theme {
   --color-background: #242424;
@@ -60,6 +67,7 @@ body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
   transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 a {

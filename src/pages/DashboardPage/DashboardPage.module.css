@@ -5,7 +5,7 @@
 
 .header {
   background-color: var(--color-card-background);
-  padding: 0 2rem;
+  padding: 0 1rem; /* Reduced padding for mobile */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -22,20 +22,31 @@
 .headerControls {
   display: flex;
   align-items: center;
-  gap: 15px; /* Space between elements in the header controls */
+  gap: 10px; /* Reduced gap for mobile */
 }
 
 .welcomeMessage {
   color: var(--color-text-primary);
-  /* margin-right: 15px; Removed as gap handles spacing */
+  font-size: 0.9rem; /* Slightly smaller font for mobile */
+  /* Removed max-width, white-space, overflow, text-overflow from here */
+}
+
+/* Mobile-specific styles */
+@media (max-width: 767px) {
+  .welcomeMessage {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px; /* Apply truncation only on small screens */
+  }
 }
 
 .signOutButton {
   background: none;
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem; /* Reduced padding for mobile */
+  font-size: 0.8rem; /* Reduced font size for mobile */
   font-weight: 600;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -66,15 +77,15 @@
 .themeToggleButton svg {
   color: var(--color-text-primary); /* Icon color */
   stroke: var(--color-text-primary); /* For feather icons */
-  width: 24px;
-  height: 24px;
+  width: 20px; /* Slightly smaller icon for mobile */
+  height: 20px; /* Slightly smaller icon for mobile */
 }
 
 .dashboardGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
-  padding: 1.5rem;
+  gap: 1rem; /* Reduced gap for mobile */
+  padding: 1rem; /* Reduced padding for mobile */
   max-width: 1200px;
   margin: 0 auto;
 }

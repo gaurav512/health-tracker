@@ -17,6 +17,7 @@
   font-size: 1.25rem;
   color: var(--color-text-primary); /* Darker color for readability */
   margin: 0;
+  font-weight: 600;
 }
 
 .timeRangeButtons {
