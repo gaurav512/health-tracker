@@ -1,0 +1,115 @@
+.loggerContainer {
+  background-color: var(--color-card-background);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--shadow-elevation-low);
+  margin-bottom: 20px;
+}
+
+.loggerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.mainTitle {
+  font-size: 1.5rem;
+  color: #333; /* Darker color for readability */
+  margin: 0;
+  display: flex;
+  flex-direction: column; /* Stack title and subtitle */
+  align-items: flex-start;
+}
+
+.subTitleDate {
+  font-size: 0.9rem; /* Smaller font size */
+  color: #777; /* Lighter color */
+  margin-top: 5px; /* Space between title and subtitle */
+}
+
+.addFoodButton {
+  background-color: var(--color-accent);
+  color: white; /* Assuming accent color provides good contrast */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.addFoodButton:hover {
+  background-color: var(--color-accent-dark);
+}
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+.foodTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.foodTable th,
+.foodTable td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.foodTable th {
+  background-color: var(--color-background-secondary);
+  color: #555; /* Darker color for readability */
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.foodTable tbody tr:hover {
+  background-color: var(--color-hover-background);
+}
+
+.foodTable td {
+  color: #333; /* Darker color for readability */
+}
+
+.actionIcons {
+  display: flex;
+  gap: 5px; /* Space between icons */
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  padding: 5px; /* Padding around the icon */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.iconButton:hover {
+  background-color: var(--color-hover-background);
+}
+
+.iconButton svg {
+  color: var(--color-text-secondary); /* Color of the icons */
+  stroke: var(--color-text-secondary); /* For feather icons */
+}
+
+.iconButton:hover svg {
+  color: var(--color-accent); /* Change color on hover */
+  stroke: var(--color-accent); /* For feather icons */
+}
+
+.emptyText {
+  color: #555; /* Darker color for readability */
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}

@@ -1,0 +1,99 @@
+import React, { useState, useEffect } from 'react';
+import styles from './LogCaloriesModal.module.css';
+
+const LogCaloriesModal = ({ isOpen, onClose, onSave, selectedDate, foodToEdit }) => {
+  const [description, setDescription] = useState('');
+  const [calories, setCalories] = useState('');
+  const [selectedMealType, setSelectedMealType] = useState('Breakfast');
+
+  const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+
+  useEffect(() => {
+    
+    if (foodToEdit) {
+      setDescription(foodToEdit.description || ''); // Ensure it's always a string
+      setCalories(typeof foodToEdit.calories === 'number' ? foodToEdit.calories.toString() : '');
+      setSelectedMealType(foodToEdit.mealType || 'Breakfast'); // Ensure it's always a string
+    } else {
+      setDescription('');
+      setCalories('');
+      setSelectedMealType('Breakfast');
+    }
+  }, [foodToEdit, isOpen]);
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    const finalDescription = description.trim() === '' ? selectedMealType : description;
+
+    if (finalDescription && calories > 0) {
+      const actionType = foodToEdit ? 'edit' : 'add';
+      const foodData = { description: finalDescription, calories: Number(calories) };
+      
+      
+
+      // Call onSave with the correct arguments matching handleLogUpdate signature
+      onSave(actionType, selectedMealType, foodData, selectedDate, foodToEdit); 
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className={styles.closeButton}>×</button>
+        <h2 className={styles.title}>{`Log Calories (for ${selectedDate})`}</h2>
+        
+        <form onSubmit={handleSave} className={styles.form}>
+          <div className={styles.inputGroup}>
+            <label>Meal Type</label>
+            <div className={styles.mealTypeTiles}>
+              {mealTypes.map(type => (
+                <button
+                  key={type}
+                  type="button"
+                  className={`${styles.mealTypeTile} ${selectedMealType === type ? styles.active : ''}`}
+                  onClick={() => setSelectedMealType(type)}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="description">Description (optional)</label>
+            <input 
+              type="text" 
+              id="description"
+              placeholder="e.g., Apple slices with peanut butter"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="calories">Calories (kcal)</label>
+            <input 
+              type="number" 
+              id="calories"
+              placeholder="e.g., 250"
+              value={calories}
+              onChange={(e) => setCalories(e.target.value)}
+              className={styles.input}
+              required
+            />
+          </div>
+
+          <button type="submit" className={styles.saveButton}>
+            LOG
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default LogCaloriesModal;

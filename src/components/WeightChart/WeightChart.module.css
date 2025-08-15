@@ -1,0 +1,64 @@
+.card {
+  background-color: var(--color-card-background);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-elevation-low);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.timeToggles {
+  display: flex;
+  gap: 0.5rem;
+  background-color: var(--color-background-secondary);
+  border-radius: 6px;
+  padding: 0.25rem;
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggleButton.active {
+  background-color: var(--color-card-background);
+  color: var(--color-accent);
+  box-shadow: var(--shadow-elevation-low);
+}
+
+.chartContainer {
+  height: 300px; /* Or any desired height */
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.trendIndicator {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}

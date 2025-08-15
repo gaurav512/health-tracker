@@ -1,0 +1,112 @@
+.card {
+  background-color: var(--color-card-background);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-elevation-low);
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.75rem;
+  color: var(--color-text-primary);
+}
+
+.summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Align items vertically in the middle */
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--color-text-secondary);
+}
+
+.metric span:first-child {
+  font-size: 0.9rem;
+}
+
+.value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.operator {
+  font-size: 1.5rem; /* Make operators slightly larger */
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 5px; /* Add some horizontal spacing */
+  align-self: center; /* Ensure vertical alignment */
+  margin-top: 1.45rem; /* Adjust to align with the value, moved 2px lower */
+}
+
+.metricRemaining {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--color-accent);
+  flex-grow: 1; /* Allow it to take more space */
+  text-align: right; /* Align to the right */
+}
+
+.metricRemaining span:first-child {
+  font-size: 1rem;
+}
+
+.valueRemaining {
+  font-size: 2.5rem; /* Larger font size */
+  font-weight: 700;
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 12px;
+  background-color: var(--color-background-secondary);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 1.5rem; /* Space before the button */
+}
+
+.progressBar {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+.progressBar.green {
+  background-color: #42b72a;
+}
+
+.progressBar.yellow {
+  background-color: #f5c33b;
+}
+
+.progressBar.red {
+  background-color: #fa383e;
+}
+
+.logCaloriesButton {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.logCaloriesButton:hover {
+  background-color: var(--color-accent-dark);
+}
