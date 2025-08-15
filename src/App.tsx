@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './firebase/auth';
 import { useUserProfile } from './context/UserProvider';
 import LoginPage from './pages/LoginPage/LoginPage';
@@ -15,6 +15,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile();
+  const location = useLocation(); // Get the current location object
 
   if (authLoading || profileLoading) {
     return <div className="full-page-loader"><div></div></div>;
@@ -25,9 +26,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (user && !userProfile?.calorieTarget) {
-    if (window.location.pathname !== '/onboarding') {
+    // Use location.pathname for comparison with HashRouter routes
+    if (location.pathname !== '/onboarding') {
       return <Navigate to="/onboarding" />;
+    } else {
+      // This else block was part of the original code, I'm restoring it.
     }
+  } else if (user && userProfile?.calorieTarget && location.pathname === '/onboarding') { // Use location.pathname
+    return <Navigate to="/dashboard" />;
   }
   
   return children;

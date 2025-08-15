@@ -112,10 +112,12 @@
 .inputGroup input, .inputGroup select {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #dddfe2;
+  border: 1px solid var(--color-border); /* Changed to use CSS variable */
   border-radius: 6px;
   font-size: 1rem;
   box-sizing: border-box;
+  background-color: var(--color-card-background); /* Added this line */
+  color: var(--color-text-primary); /* Added this line for text color consistency */
 }
 
 .inputGroup input:focus, .inputGroup select:focus {
